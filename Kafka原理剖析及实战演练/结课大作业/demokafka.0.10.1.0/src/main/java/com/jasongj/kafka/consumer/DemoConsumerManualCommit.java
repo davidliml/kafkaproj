@@ -12,7 +12,8 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 public class DemoConsumerManualCommit {
 
 	public static void main(String[] args) throws Exception {
-		args = new String[] { "192.168.16.172:9092", "gender-amount", "group4", "consumer2" };
+		args = new String[] { "192.168.100.143:9092", "gender-amount", "group4", "consumer2" };
+		//args = new String[] { "192.168.100.143:9092", "orders", "group4", "consumer2" };
 		if (args == null || args.length != 4) {
 			System.err.println(
 					"Usage:\n\tjava -jar kafka_consumer.jar ${bootstrap_server} ${topic_name} ${group_name} ${client_id}");
@@ -38,7 +39,7 @@ public class DemoConsumerManualCommit {
 		while (true) {
 			ConsumerRecords<String, String> records = consumer.poll(100);
 			records.forEach(record -> {
-				System.out.printf("client : %s , topic: %s , partition: %d , offset = %d, key = %s, value = %s%n",
+				System.out.printf("client : %s , topic: %s , partition: %d , offset = %d, key = %s, value = %s",
 						clientid, record.topic(), record.partition(), record.offset(), record.key(), record.value());
 				if (atomicLong.get() % 10 == 0) {
 //					consumer.commitSync();

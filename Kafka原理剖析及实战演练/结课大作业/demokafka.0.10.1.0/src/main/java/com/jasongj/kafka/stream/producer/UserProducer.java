@@ -1,6 +1,7 @@
 package com.jasongj.kafka.stream.producer;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Properties;
@@ -14,6 +15,8 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 import com.jasongj.kafka.producer.HashPartitioner;
+import com.jasongj.kafka.stream.model.Item;
+import com.jasongj.kafka.stream.model.Order;
 import com.jasongj.kafka.stream.model.User;
 import com.jasongj.kafka.stream.serdes.GenericSerializer;
 
@@ -21,7 +24,7 @@ public class UserProducer {
 
 	public static void main(String[] args) throws Exception {
 		Properties props = new Properties();
-		props.put("bootstrap.servers", "192.168.16.172:9092");
+		props.put("bootstrap.servers", "192.168.100.143:9092");
 		props.put("acks", "all");
 		props.put("retries", 3);
 		props.put("batch.size", 16384);
@@ -33,9 +36,29 @@ public class UserProducer {
 		props.put("partitioner.class", HashPartitioner.class.getName());
 
 		Producer<String, User> producer = new KafkaProducer<String, User>(props);
-		List<User> users = readUser();
-		users.forEach((User user) -> producer.send(new ProducerRecord<String, User>("users", user.getName(), user)));
-		producer.close();
+		RandomAccessFile br=new RandomAccessFile("F:\\studyproj\\gitsource\\Kafka原理剖析及实战演练\\结课大作业\\demokafka.0.10.1.0\\src\\main\\resources\\users.csv","rw");
+		try {
+			
+			String str = "";
+			while ((str = br.readLine()) != null) {
+			if (str==null||str.trim().equals("")) {}else {
+				String[] values = str.split(",");
+				User user = new User(values[0], values[1], values[2], Integer.parseInt(values[3].trim()));
+				producer.send(new ProducerRecord<String, User>("users", user.getName(), user));
+				Thread.sleep(5000);	
+			} 
+			
+			
+			}
+		
+		} catch (Exception e) {
+			e.printStackTrace();
+			// TODO: handle exception
+		}finally {
+			producer.close();
+		}
+		
+		
 	}
 	
 	public static List<User> readUser() throws IOException {

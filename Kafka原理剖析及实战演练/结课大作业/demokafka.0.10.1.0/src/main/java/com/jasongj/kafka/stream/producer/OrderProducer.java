@@ -27,7 +27,7 @@ public class OrderProducer {
 
 	public static void main(String[] args) throws Exception {
 		Properties props = new Properties();
-		props.put("bootstrap.servers", "192.168.16.172:9092");
+		props.put("bootstrap.servers", "192.168.100.143:9092");
 		props.put("acks", "all");
 		props.put("retries", 3);
 		props.put("batch.size", 16384);
@@ -39,9 +39,20 @@ public class OrderProducer {
 		props.put("partitioner.class", HashPartitioner.class.getName());
 
 		Producer<String, Order> producer = new KafkaProducer<String, Order>(props);
-		List<Order> orders = readOrder();
-		orders.forEach((Order order) -> producer.send(new ProducerRecord<String, Order>("orders", order.getUserName(), order)));
-		producer.close();
+		try {
+			while (true) {
+				List<Order> orders = readOrder();
+				orders.forEach((Order order) -> producer.send(new ProducerRecord<String, Order>("orders", order.getUserName(), order)));
+				
+				Thread.sleep(5000);	
+			}	
+		} catch (Exception e) {
+			e.printStackTrace();
+			// TODO: handle exception
+		}finally {
+			producer.close();
+		}
+		
 	}
 	
 	public static List<Order> readOrder() throws IOException {

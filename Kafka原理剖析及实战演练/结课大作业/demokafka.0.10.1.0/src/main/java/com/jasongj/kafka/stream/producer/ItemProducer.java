@@ -1,6 +1,7 @@
 package com.jasongj.kafka.stream.producer;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Properties;
@@ -15,13 +16,14 @@ import org.apache.kafka.common.serialization.StringSerializer;
 
 import com.jasongj.kafka.producer.HashPartitioner;
 import com.jasongj.kafka.stream.model.Item;
+import com.jasongj.kafka.stream.model.User;
 import com.jasongj.kafka.stream.serdes.GenericSerializer;
 
 public class ItemProducer {
 	
 	public static void main(String[] args) throws Exception {
 		Properties props = new Properties();
-		props.put("bootstrap.servers", "192.168.16.172:9092");
+		props.put("bootstrap.servers", "192.168.100.143:9092");
 		props.put("acks", "all");
 		props.put("retries", 3);
 		props.put("batch.size", 16384);
@@ -33,9 +35,28 @@ public class ItemProducer {
 		props.put("partitioner.class", HashPartitioner.class.getName());
 
 		Producer<String, Item> producer = new KafkaProducer<String, Item>(props);
-		List<Item> items = readItem();
-		items.forEach((Item item) -> producer.send(new ProducerRecord<String, Item>("items", item.getItemName(), item)));
-		producer.close();
+		RandomAccessFile br=new RandomAccessFile("F:\\studyproj\\gitsource\\Kafka原理剖析及实战演练\\结课大作业\\demokafka.0.10.1.0\\src\\main\\resources\\items.csv","rw");
+		try {
+			
+			String str = "";
+			while ((str = br.readLine()) != null) {
+			if (str==null||str.trim().equals("")) {}else {
+				String[] values = str.split(",");
+				Item item = new Item(values[0], values[1], values[2], Double.parseDouble(values[3].trim()));
+				producer.send(new ProducerRecord<String, Item>("items", item.getItemName(), item));
+				Thread.sleep(5000);	
+			} 
+			
+			}
+			
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			// TODO: handle exception
+		}finally {
+			producer.close();
+		}
+		
 	}
 	
 	public static List<Item> readItem() throws IOException {
