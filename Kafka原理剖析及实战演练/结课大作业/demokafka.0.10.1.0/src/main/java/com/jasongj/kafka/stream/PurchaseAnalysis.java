@@ -2,6 +2,7 @@ package com.jasongj.kafka.stream;
 
 import java.io.IOException;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -12,6 +13,8 @@ import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
 import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.TimeWindows;
+import org.apache.kafka.streams.kstream.Windowed;
 
 import com.jasongj.kafka.stream.model.Item;
 import com.jasongj.kafka.stream.model.Order;
@@ -42,6 +45,15 @@ public class PurchaseAnalysis {
 		KTable<String, User> userTable = streamBuilder.table(Serdes.String(), SerdesFactory.serdFrom(User.class), "users", "users-state-store");
 		KTable<String, Item> itemTable = streamBuilder.table(Serdes.String(), SerdesFactory.serdFrom(Item.class), "items", "items-state-store");
 
+		KTable<Windowed<String>, Order> windowedCounts = orderStream
+			    .groupByKey(Serdes.String(),Serdes.serdeFrom(Order.class))
+			    .aggregate(null, null, TimeWindows.of(TimeUnit.MINUTES.toMillis(60)).advanceBy(5*1000L), Serdes.serdeFrom(Order.class), "orders-aggValue");
+			   
+
+
+		
+		
+		
 		KTable<String, String> kTable = orderStream
 				.leftJoin(itemTable, (Order order, Item item) -> OrderItem.fromOrder(order, item), Serdes.String(), SerdesFactory.serdFrom(Order.class))
 				.filter((String itemAddress, OrderItem orderUser) -> orderUser.itemAddress != null)
